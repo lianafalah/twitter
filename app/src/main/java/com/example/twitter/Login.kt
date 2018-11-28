@@ -50,6 +50,7 @@ class Login : AppCompatActivity() {
             .addOnCompleteListener(this) { task ->
                 if (task.isSuccessful) {
                     Toast.makeText(applicationContext,"Successful login",Toast.LENGTH_LONG).show()
+                    LoadTweets()
 
                 } else {
                     // If sign in fails, display a message to the user.

@@ -5,9 +5,11 @@ import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.drawable.BitmapDrawable
+import android.nfc.Tag
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
 import android.provider.MediaStore
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -18,9 +20,11 @@ import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
 import com.google.firebase.storage.FirebaseStorage
+import com.squareup.picasso.Picasso
 import kotlinx.android.synthetic.main.activity_login.*
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.add_ticket.view.*
+import kotlinx.android.synthetic.main.tweets_ticket.view.*
 import java.io.ByteArrayOutputStream
 import java.lang.Exception
 import java.text.SimpleDateFormat
@@ -42,12 +46,14 @@ class MainActivity : AppCompatActivity() {
         myEmail=b.getString("email")
         UserUID=b.getString("uid")
 
+        //dummy data
         ListTweets.add(Ticket("0","him","url","add"))
-        ListTweets.add(Ticket("0","him","url","add"))
-        ListTweets.add(Ticket("0","him","url","add"))
-        ListTweets.add(Ticket("0","him","url","add"))
+        ListTweets.add(Ticket("0","him","url","byy"))
+        ListTweets.add(Ticket("0","him","url","mnn"))
+
         adpater=MyTweetAdpater(this,ListTweets)
         lvTweets.adapter=adpater
+        LoadPost()
 
     }
     inner class MyTweetAdpater: BaseAdapter {
@@ -57,7 +63,6 @@ class MainActivity : AppCompatActivity() {
             this.listNotesAdpater = ListTweetAdpater
         }
         override fun getView(position: Int, convertView: View?, parent: ViewGroup?): View {
-
             var mytweets = listNotesAdpater[position]
             if (mytweets.tweetPersonUID.equals("add")) {
                 var myView = layoutInflater.inflate(R.layout.add_ticket,null)
@@ -75,7 +80,10 @@ class MainActivity : AppCompatActivity() {
                 return myView
             } else {
                 var myView = layoutInflater.inflate(R.layout.tweets_ticket, null)
-                //load tweet ticket
+                myView.txt_tweet.setText(mytweets.tweetText)
+                myView.txtUserName.setText(mytweets.tweetPersonUID)
+
+                Picasso.with(context).load(mytweets.tweetImageUrl).into(myView.tweet_picture)
                 return myView
             }
         }
@@ -115,9 +123,8 @@ class MainActivity : AppCompatActivity() {
 
     var DownloadURL:String?=""
     fun UploadImage(bitmap:Bitmap){
-
         val storage= FirebaseStorage.getInstance()
-        val storageRef=storage.getReferenceFromUrl("gs://twitter-979ff.appspot.com")
+        val storageRef=storage.getReferenceFromUrl("gs://twitter-4d2b7.appspot.com")
         val df= SimpleDateFormat("ddMMyyHHmmss")
         val dataobj = Date()
         val imagePath=SplitString(myEmail!!) +"." +df.format(dataobj)+ ".jpg"
@@ -129,7 +136,6 @@ class MainActivity : AppCompatActivity() {
         uploadTask.addOnFailureListener{
             Toast.makeText(applicationContext,"fail to upload", Toast.LENGTH_LONG).show()
         }.addOnSuccessListener { taskSnapshot ->
-
            DownloadURL=taskSnapshot.getStorage().getDownloadUrl().toString()
 
         }
@@ -142,9 +148,11 @@ class MainActivity : AppCompatActivity() {
         myRef.child("posts")
             .addValueEventListener(object :ValueEventListener{
                 override fun onDataChange(dataSnapshot: DataSnapshot) {
-                    TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
                 try {
-                    var td= dataSnapshot!!.value as HashMap<String,Any>
+                    ListTweets.clear()
+                    ListTweets.add(Ticket("0","him","url","add"))
+                    ListTweets.add(Ticket("0","him","url","byy"))
+                     var td= dataSnapshot!!.value as HashMap<String,Any>
                     for (key in td.keys){
                         var post= td[key] as HashMap<String,Any>
                         ListTweets.add(Ticket(key,
